@@ -1,0 +1,26 @@
+name: pFootcube
+version: '1.0.0-b160'
+main: com.maatijaa.pfootcube.pFootcube
+api-version: '1.8'
+author: Maatijaa
+description: Fudbal u majnkraftu.
+load: STARTUP
+commands:
+  cube:
+    description: Stvara loptu..
+  clearCubes:
+    description: Brise sve lopte koje imaju.
+  clearCube:
+    description: Brise najblizu loptu u odredjenom radiusu.
+  tc:
+    description: team-chat
+  footcube:
+    aliases: [fc]
+    description: Glavna komanda.
+  commandDisabler:
+    aliases: [cd]
+    description: Dozvoljava/Ne dozvoljava komande.
+  spy:
+    description: enable / disable spying
+  g:
+    description: global ch
