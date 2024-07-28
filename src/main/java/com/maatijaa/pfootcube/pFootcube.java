@@ -183,7 +183,7 @@ public class pFootcube extends JavaPlugin implements Listener
         if (e.getEntity() instanceof Slime && this.cubes.contains(e.getEntity()) && e.getDamager() instanceof Player && e.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK) {
             final Slime cube = (Slime)e.getEntity();
             final Player p = (Player)e.getDamager();
-            double charge = 1.0;
+            double charge = 0.5;
             if (this.charges.containsKey(p.getName())) {
                 charge += this.charges.get(p.getName()) * 3.5;
             }
