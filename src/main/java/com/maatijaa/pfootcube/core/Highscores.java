@@ -1,4 +1,3 @@
-
 package com.maatijaa.pfootcube.core;
 
 import com.maatijaa.pfootcube.pFootcube;
@@ -39,25 +38,25 @@ public class Highscores
     
     public void addWaitingPlayer(final Player p) {
         this.waitingPlayers.add(p);
-        p.sendMessage(String.valueOf(this.organization.pluginString) + ChatColor.GREEN + "Scores are updating, please wait");
-        p.sendMessage(ChatColor.GOLD + "Updating 500 players per second with " + (this.participents.length - this.lastUpdatedParticipent) + " players to go");
+        p.sendMessage(String.valueOf(this.organization.pluginString) + ChatColor.GREEN + "Statistika se osvezava molimo sacekajte!");
+        p.sendMessage(ChatColor.GOLD + "Osvezavamo 500 igraca preostalo vremena i igraca " + (this.participents.length - this.lastUpdatedParticipent) + " ,igraca za nastaviti.");
     }
     
     public void showHighscores(final Player p) {
-        p.sendMessage(String.valueOf(this.organization.pluginString) + ChatColor.GOLD + "All FootCube highscores:");
-        p.sendMessage(ChatColor.AQUA + "Best ratings:");
+        p.sendMessage(String.valueOf(this.organization.pluginString) + ChatColor.GOLD + "Statistika Fudbal-a:");
+        p.sendMessage(ChatColor.AQUA + "Najbolji Rejtinzi:");
         for (int i = 0; i < 3; ++i) {
             p.sendMessage(new StringBuilder().append(ChatColor.GRAY).append(i + 1).append(". ").append(this.recordHolders[i]).append(" - ").append(this.bestRatings[i]).toString());
         }
-        p.sendMessage(ChatColor.AQUA + "Most goals:");
+        p.sendMessage(ChatColor.AQUA + "Najbolji Strelac:");
         for (int i = 0; i < 3; ++i) {
             p.sendMessage(new StringBuilder().append(ChatColor.GRAY).append(i + 1).append(". ").append(this.recordHolders[i + 3]).append(" - ").append(this.mostGoals[i]).toString());
         }
-        p.sendMessage(ChatColor.AQUA + "Most wins:");
+        p.sendMessage(ChatColor.AQUA + "Najvise pobeda:");
         for (int i = 0; i < 3; ++i) {
             p.sendMessage(new StringBuilder().append(ChatColor.GRAY).append(i + 1).append(". ").append(this.recordHolders[i + 6]).append(" - ").append(this.mostWins[i]).toString());
         }
-        p.sendMessage(ChatColor.AQUA + "Longest win streak:");
+        p.sendMessage(ChatColor.AQUA + "Najveci Win Streak:");
         for (int i = 0; i < 3; ++i) {
             p.sendMessage(new StringBuilder().append(ChatColor.GRAY).append(i + 1).append(". ").append(this.recordHolders[i + 9]).append(" - ").append(this.longestStreak[i]).toString());
         }
@@ -71,15 +70,15 @@ public class Highscores
         this.mostGoals = new int[3];
         this.mostWins = new int[3];
         this.longestStreak = new int[3];
-        this.recordHolders = new String[] { "nobody", "nobody", "nobody", "nobody", "nobody", "nobody", "nobody", "nobody", "nobody", "nobody", "nobody", "nobody" };
+        this.recordHolders = new String[] { "Niko", "Niko", "Niko", "Niko", "Niko", "Niko", "Niko", "Niko", "Niko", "Niko", "Niko", "Niko" };
         this.participents = new String[this.organization.matches.keySet().size()];
         int i = 0;
         for (final String s : this.organization.matches.keySet()) {
             this.participents[i] = s;
             ++i;
         }
-        p.sendMessage(String.valueOf(this.organization.pluginString) + ChatColor.GREEN + "Scores are updating, please wait");
-        p.sendMessage(ChatColor.GOLD + "Updating 500 players per second with " + this.participents.length + " players to go");
+        p.sendMessage(String.valueOf(this.organization.pluginString) + ChatColor.GREEN + "Statistika se osvezava molimo sacekajte!");
+        p.sendMessage(ChatColor.GOLD + "Osvezavamo 500 igraca preostalo vremena i igraca " + this.participents.length + " ,igraca za nastaviti.");
         this.lastUpdatedParticipent = 0;
         this.taskID = this.bs.scheduleAsyncRepeatingTask((Plugin)this.plugin, (Runnable)new Runnable() {
             public void run() {

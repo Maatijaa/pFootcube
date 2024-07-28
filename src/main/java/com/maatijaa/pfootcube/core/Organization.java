@@ -1,4 +1,3 @@
-
 package com.maatijaa.pfootcube.core;
 
 import com.maatijaa.pfootcube.misc.DisableCommands;
@@ -53,8 +52,10 @@ public class Organization implements Listener
     private String setupGuy;
     private int setupType;
     private Location setupLoc;
+    private Match[] matches2v2;
     private Match[] matches3v3;
     private Match[] matches4v4;
+    private int lobby2v2;
     private int lobby3v3;
     private int lobby4v4;
     private int practiceBalls;
@@ -82,14 +83,16 @@ public class Organization implements Listener
     
     public Organization(final pFootcube pl) {
         this.highscores = null;
-        this.pluginString = ChatColor.GRAY + "[" + ChatColor.YELLOW + "FC" + ChatColor.GRAY + "]";
-        this.adminString = ChatColor.GRAY + "[" + ChatColor.RED + "Admin" + ChatColor.GRAY + "]";
+        this.pluginString = ChatColor.DARK_AQUA + "FUT ";
+        this.adminString = ChatColor.AQUA + "FUT ADMIN ";
         this.or = ChatColor.YELLOW + "|" + ChatColor.AQUA;
         this.setupGuy = null;
         this.setupType = 0;
         this.setupLoc = null;
+        this.matches2v2 = new Match[0];
         this.matches3v3 = new Match[0];
         this.matches4v4 = new Match[0];
+        this.lobby2v2 = 0;
         this.lobby3v3 = 0;
         this.lobby4v4 = 0;
         this.practiceBalls = 0;
@@ -117,19 +120,20 @@ public class Organization implements Listener
         this.disableCommands = new DisableCommands(this.plugin, this);
         this.plugin.getServer().getPluginManager().registerEvents((Listener)this, (Plugin)this.plugin);
         final FileConfiguration cfg = this.plugin.getConfig();
+        cfg.addDefault("arenas.2v2.amount", (Object)0);
         cfg.addDefault("arenas.3v3.amount", (Object)0);
         cfg.addDefault("arenas.4v4.amount", (Object)0);
         cfg.options().copyDefaults(true);
         this.plugin.saveConfig();
         this.loadArenas(cfg);
-        this.wins.setup("plugins" + File.separator + "FootCube" + File.separator + "wins.stats");
-        this.matches.setup("plugins" + File.separator + "FootCube" + File.separator + "matches.stats");
-        this.ties.setup("plugins" + File.separator + "FootCube" + File.separator + "ties.stats");
-        this.goals.setup("plugins" + File.separator + "FootCube" + File.separator + "goals.stats");
-        this.store.setup("plugins" + File.separator + "FootCube" + File.separator + "store.stats");
-        this.winStreak.setup("plugins" + File.separator + "FootCube" + File.separator + "winStreak.stats");
-        this.bestWinStreak.setup("plugins" + File.separator + "FootCube" + File.separator + "bestWinStreak.stats");
-        this.uuidConverter.setup("plugins" + File.separator + "FootCube" + File.separator + "UUID.data");
+        this.wins.setup("plugins" + File.separator + "pFootcube" + File.separator + "wins.stats");
+        this.matches.setup("plugins" + File.separator + "pFootcube" + File.separator + "matches.stats");
+        this.ties.setup("plugins" + File.separator + "pFootcube" + File.separator + "ties.stats");
+        this.goals.setup("plugins" + File.separator + "pFootcube" + File.separator + "goals.stats");
+        this.store.setup("plugins" + File.separator + "pFootcube" + File.separator + "store.stats");
+        this.winStreak.setup("plugins" + File.separator + "pFootcube" + File.separator + "winStreak.stats");
+        this.bestWinStreak.setup("plugins" + File.separator + "pFootcube" + File.separator + "bestWinStreak.stats");
+        this.uuidConverter.setup("plugins" + File.separator + "pFootcube" + File.separator + "UUID.data");
         this.wins.load();
         this.matches.load();
         this.ties.load();
@@ -165,14 +169,14 @@ public class Organization implements Listener
     public void command(final CommandSender sender, final Command cmd, final String c, final String[] args) {
         this.disableCommands.command(sender, cmd, c, args);
         final Player p = (Player)sender;
-        if (cmd.getName().equalsIgnoreCase("spy") && p.hasPermission("footcube.spy")) {
+        if (cmd.getName().equalsIgnoreCase("spy") && p.hasPermission("pfootcube.spy")) {
             if (this.spy.contains(p)) {
                 this.spy.remove(p);
-                p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "Spy mode disabled");
+                p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "Prisluskivanje je uspesno iskljuceno.");
             }
             else {
                 this.spy.add(p);
-                p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "Spy mode enabled");
+                p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "Prisluskivanje je uspesno ukljuceno.");
             }
         }
         if (cmd.getName().equalsIgnoreCase("g")) {
@@ -206,70 +210,81 @@ public class Organization implements Listener
             }
             else if (args[0].equalsIgnoreCase("join")) {
                 if (this.waitingPlayers.containsKey(p.getName()) || this.playingPlayers.contains(p.getName())) {
-                    p.sendMessage(ChatColor.RED + "You are already in a game");
+                    p.sendMessage(ChatColor.DARK_RED + "Vec si u utakmici");
                 }
                 else if (this.waitingTeamPlayers.contains(p)) {
-                    p.sendMessage(ChatColor.RED + "You are in a team, you cannot join a match");
+                    p.sendMessage(ChatColor.DARK_RED + "Ti si u timu ne mozes uci u utakmicu.");
                 }
                 else if (args.length < 2) {
-                    p.sendMessage(ChatColor.RED + "You need to specify the type of arena");
-                    p.sendMessage(ChatColor.AQUA + "/fc join [3v3" + this.or + "4v4]");
+                    p.sendMessage(ChatColor.DARK_RED + "Specifikuj u koji GameMode zelis uci.");
+                    p.sendMessage(ChatColor.DARK_AQUA + "/fc join [2v2/3v3/4v4]");
+
+                }
+                else if (args[1].equalsIgnoreCase("2v2")) {
+                    this.matches2v2[this.lobby2v2].join(p, true);
+                    this.waitingPlayers.put(p.getName(), 2);
                 }
                 else if (args[1].equalsIgnoreCase("3v3")) {
-                    this.matches3v3[this.lobby3v3].join(p, false);
+                    this.matches3v3[this.lobby3v3].join(p, true);
                     this.waitingPlayers.put(p.getName(), 3);
                     this.removeTeam(p);
                 }
                 else if (args[1].equalsIgnoreCase("4v4")) {
-                    this.matches4v4[this.lobby4v4].join(p, false);
+                    this.matches4v4[this.lobby4v4].join(p, true);
                     this.waitingPlayers.put(p.getName(), 4);
                     this.removeTeam(p);
                 }
                 else {
-                    p.sendMessage(ChatColor.RED + args[1] + " is not a valid arena type");
-                    p.sendMessage(ChatColor.AQUA + "/fc setuparena [3v3" + this.or + "4v4]");
+                    p.sendMessage(ChatColor.DARK_RED + args[1] + " To nije validna vrsta arene.");
+                    p.sendMessage(ChatColor.AQUA + "/fc setuparena [2v2/3v3/4v4]");
                 }
             }
             else if (args[0].equalsIgnoreCase("best")) {
                 this.updateHighscores(p);
             }
+
+            // Team Method will NOT be used. Just Inputed here for Work. And Rewritted.
+
+            else if (args[0].equalsIgnoreCase("best")) {
+                this.updateHighscores(p);
+            }
             else if (args[0].equalsIgnoreCase("team")) {
                 if (args.length < 2) {
-                    p.sendMessage(ChatColor.AQUA + "/fc team [3v3" + this.or + "4v4] [player]");
+                    p.sendMessage(ChatColor.AQUA + "/fc team [2v2/3v3/4v4] [Igrac]");
                     p.sendMessage(ChatColor.AQUA + "/fc team accept/decline/cancel");
                 }
-                else if (args[1].equalsIgnoreCase("3v3") || args[1].equalsIgnoreCase("4v4")) {
+                else if (args[1].equalsIgnoreCase("2v2") || (args[1].equalsIgnoreCase("3v3") || args[1].equalsIgnoreCase("4v4"))) {
                     if (this.waitingPlayers.containsKey(p.getName()) || this.playingPlayers.contains(p.getName())) {
-                        p.sendMessage(ChatColor.RED + "You can't send team requests while you're in a match");
+                        p.sendMessage(ChatColor.DARK_RED + "Greska: Ne mozes slati requestove za timovanje dok si u utakmici.");
                     }
                     else if (this.waitingTeamPlayers.contains(p)) {
-                        p.sendMessage(ChatColor.RED + "You're already in a team");
+                        p.sendMessage(ChatColor.DARK_RED + "Greska: Vec Si u timu.");
                     }
                     else if (this.team.containsKey(p)) {
                         final String matchType = this.teamType.get(this.team.get(p)) + "v" + this.teamType.get(this.team.get(p));
-                        p.sendMessage(ChatColor.RED + "You already got a team request yourself by " + this.team.get(p).getName() + " for a " + matchType + " match");
-                        p.sendMessage(ChatColor.AQUA + "/fc team accept" + ChatColor.GREEN + " or " + ChatColor.AQUA + "/fc team decline" + ChatColor.GREEN + " to answer the team request");
+                        p.sendMessage(ChatColor.DARK_RED + "Greska: Vec si dobio zahtev za timanje od " + this.team.get(p).getName() + " za " + matchType + " utakmicu.");
+                        p.sendMessage(ChatColor.AQUA + "/fc team accept" + ChatColor.GREEN + " ili " + ChatColor.AQUA + "/fc team decline" + ChatColor.GREEN + " da odgovoris na zahtev za timovanje.");
                     }
                     else if (this.teamReverse.containsKey(p)) {
                         final String matchType = this.teamType.get(p) + "v" + this.teamType.get(p);
-                        p.sendMessage(ChatColor.RED + "You already sent a team request to " + this.teamReverse.get(p).getName() + " for a " + matchType + " match");
+                        p.sendMessage(ChatColor.DARK_RED + "Greska: Vec si poslao zahtev za timanje igracu " + this.teamReverse.get(p).getName() + " za " + matchType + " utakmicu.");
                     }
                     else if (args.length < 3) {
-                        p.sendMessage(ChatColor.AQUA + "/fc team " + args[1] + " [player]");
+                        p.sendMessage(ChatColor.GOLD + "Koriscenje: /fc team " + args[1] + " [Igrac]");
                     }
                     else if (this.isOnlinePlayer(args[2])) {
                         final Player player = this.plugin.getServer().getPlayer(args[2]);
                         if (this.waitingTeamPlayers.contains(player)) {
-                            p.sendMessage(ChatColor.RED + args[2] + " is already in a team");
+                            p.sendMessage(ChatColor.DARK_RED + args[2] + " je vec u timu.");
                         }
                         else if (this.waitingPlayers.containsKey(player.getName()) || this.playingPlayers.contains(player.getName())) {
-                            p.sendMessage(ChatColor.RED + args[2] + " is already in a game");
+                            p.sendMessage(ChatColor.DARK_RED + args[2] + " je vec u utakmici.");
                         }
                         else if (this.team.containsKey(player)) {
-                            p.sendMessage(ChatColor.RED + args[2] + " already got a team request");
+                            p.sendMessage(ChatColor.DARK_RED + args[2] + " ima vec zahtev za timovanje.");
                         }
                         else if (this.teamReverse.containsKey(player)) {
-                            p.sendMessage(ChatColor.RED + args[2] + " already sent a team request to someone else");
+                            p.sendMessage(ChatColor.DARK_RED + args[2] + " vec je poslao zahtev za timovanje nekom.");
                         }
                         else {
                             this.team.put(player, p);
@@ -286,7 +301,7 @@ public class Organization implements Listener
                         }
                     }
                     else {
-                        p.sendMessage(ChatColor.RED + args[2] + " is not online");
+                        p.sendMessage(ChatColor.DARK_RED + args[2] + " nije onlajn");
                     }
                 }
                 else if (args[1].equalsIgnoreCase("cancel")) {
@@ -302,6 +317,7 @@ public class Organization implements Listener
                         p.sendMessage(ChatColor.RED + "You haven't sent a team request");
                     }
                 }
+                // IZMENJENO
                 else if (args[1].equalsIgnoreCase("accept")) {
                     if (this.team.containsKey(p)) {
                         final Player player = this.team.get(p);
@@ -314,13 +330,12 @@ public class Organization implements Listener
                                 this.waitingTeams = this.extendArray(this.waitingTeams, new Player[] { p, player, null });
                                 this.waitingTeamPlayers.add(p);
                                 this.waitingTeamPlayers.add(player);
-                                p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "You succesfully teamed with " + player.getName());
+                                p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "You successfully teamed with " + player.getName());
                                 p.sendMessage(ChatColor.GREEN + "You must wait for there to be place for a team, this won't take long");
-                                player.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "You succesfully teamed with " + p.getName());
+                                player.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "You successfully teamed with " + p.getName());
                                 player.sendMessage(ChatColor.GREEN + "You must wait for there to be place for a team, this won't take long");
                             }
-                        }
-                        else {
+                        } else {
                             this.waitingPlayers.put(p.getName(), 4);
                             this.waitingPlayers.put(player.getName(), 4);
                             if (!this.matches4v4[this.lobby4v4].team(p, player)) {
@@ -329,12 +344,13 @@ public class Organization implements Listener
                                 this.waitingTeams = this.extendArray(this.waitingTeams, new Player[] { p, player });
                                 this.waitingTeamPlayers.add(p);
                                 this.waitingTeamPlayers.add(player);
-                                p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "You succesfully teamed with " + player.getName());
+                                p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "You successfully teamed with " + player.getName());
                                 p.sendMessage(ChatColor.GREEN + "You must wait for there to be place for a team, this won't take long");
-                                player.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "You succesfully teamed with " + p.getName());
+                                player.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "You successfully teamed with " + p.getName());
                                 player.sendMessage(ChatColor.GREEN + "You must wait for there to be place for a team, this won't take long");
                             }
                         }
+                        // IZMENJENO
                         this.team.remove(p);
                         this.teamReverse.remove(player);
                         this.teamType.remove(player);
@@ -361,10 +377,13 @@ public class Organization implements Listener
                     p.sendMessage(ChatColor.AQUA + "/fc team accept/decline/cancel");
                 }
             }
+
+            // This is just Line Separator || Team Method Mafaka
+
             else if (args[0].equalsIgnoreCase("takeplace")) {
                 if (this.leftMatches.length > 0) {
                     if (this.waitingPlayers.containsKey(p.getName()) || this.playingPlayers.contains(p.getName())) {
-                        p.sendMessage(ChatColor.RED + "You are already in a match");
+                        p.sendMessage(ChatColor.DARK_RED + "Greska: Vec si u utakmici.");
                     }
                     else {
                         this.leftMatches[0].takePlace(p);
@@ -380,7 +399,7 @@ public class Organization implements Listener
                     }
                 }
                 else {
-                    p.sendMessage(ChatColor.RED + "There is no place to be taken");
+                    p.sendMessage(ChatColor.DARK_RED + "Nema mesta koje bih mogao preuzeti ostajes na klupi :(");
                 }
             }
             else if (args[0].equalsIgnoreCase("stats")) {
@@ -390,7 +409,7 @@ public class Organization implements Listener
                         this.checkStats(uuid, p);
                     }
                     else {
-                        p.sendMessage(ChatColor.RED + args[1] + " has never played FootCube");
+                        p.sendMessage(ChatColor.DARK_RED + args[1] + " nikad nije igrao Fudbal.");
                         this.checkStats(p.getUniqueId().toString(), p);
                     }
                 }
@@ -398,12 +417,24 @@ public class Organization implements Listener
                     this.checkStats(p.getUniqueId().toString(), p);
                 }
             }
-            else if (args[0].equalsIgnoreCase("store")) {
-                this.openStore(p);
-            }
+            // AA
             else if (args[0].equalsIgnoreCase("leave")) {
                 if (this.waitingPlayers.containsKey(p.getName())) {
-                    if (this.waitingPlayers.get(p.getName()) == 3) {
+                    if (this.waitingPlayers.get(p.getName()) == 2) {
+                        this.matches2v2[this.lobby2v2].leave(p);
+                        this.waitingPlayers.remove(p.getName());
+                        int team = -1;
+                        for (int j = 0; j < this.waitingTeams.length; ++j) {
+                            if (this.waitingTeams[j].length == 1) {
+                                team = j;
+                                break;
+                            }
+                        }
+                        if (team > -1 && this.matches2v2[this.lobby2v2].team(this.waitingTeams[team][0], this.waitingTeams[team][1])) {
+                            this.waitingTeamPlayers.remove(this.waitingTeams[team][0]);
+                            this.reduceArray(this.waitingTeams, this.waitingTeams[team][0]);
+                        }
+                    } else if (this.waitingPlayers.get(p.getName()) == 3) {
                         this.matches3v3[this.lobby3v3].leave(p);
                         this.waitingPlayers.remove(p.getName());
                         int team = -1;
@@ -418,8 +449,7 @@ public class Organization implements Listener
                             this.waitingTeamPlayers.remove(this.waitingTeams[team][1]);
                             this.reduceArray(this.waitingTeams, this.waitingTeams[team][0]);
                         }
-                    }
-                    else {
+                    } else {
                         this.matches4v4[this.lobby4v4].leave(p);
                         this.waitingPlayers.remove(p.getName());
                         int team = -1;
@@ -436,42 +466,43 @@ public class Organization implements Listener
                         }
                     }
                 }
+            // AA
                 else if (!this.playingPlayers.contains(p.getName())) {
-                    p.sendMessage(ChatColor.RED + "You are not even in a match");
+                    p.sendMessage(ChatColor.DARK_RED + "Greska: Nisi u utakmici.");
                 }
                 else {
-                    p.sendMessage(ChatColor.RED + "You can't leave when the match is already started");
+                    p.sendMessage(ChatColor.DARK_RED + "Greska: Ne mozes napustiti utakmicu koja je tek pocela.");
                 }
             }
             else if (args[0].equalsIgnoreCase("undo") && this.setupGuy == p.getName()) {
                 this.setupGuy = null;
                 this.setupType = 0;
                 this.setupLoc = null;
-                p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "Undo succesful");
+                p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "Undo uspesan.");
             }
-            else if (args[0].equalsIgnoreCase("clearStore") && p.hasPermission("footcube.admin")) {
+            else if (args[0].equalsIgnoreCase("clearStore") && p.hasPermission("pfootcube.admin")) {
                 if (args.length > 1) {
                     if (Bukkit.getOfflinePlayer(args[1]).hasPlayedBefore()) {
                         final String s = Bukkit.getOfflinePlayer(args[1]).getUniqueId().toString();
                         if (this.store.has(s)) {
                             this.store.put(s, 0);
-                            p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "You succesfully wiped " + args[1] + "'s store");
+                            p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "Uspesno si mu ocistio " + args[1] + " prodavnicu.");
                         }
                         else {
-                            p.sendMessage(ChatColor.RED + args[1] + " doesn't have a store account");
+                            p.sendMessage(ChatColor.DARK_RED + args[1] + " nema prodavnicin akaunt.");
                         }
                     }
                     else {
-                        p.sendMessage(ChatColor.RED + args[1] + " doesn't have a store account");
+                        p.sendMessage(ChatColor.DARK_RED + args[1] + " nema prodavnicin akaunt.");
                     }
                 }
                 else {
-                    p.sendMessage(ChatColor.AQUA + "/fc clearStore [player]");
+                    p.sendMessage(ChatColor.AQUA + "/fc clearStore [Igrac]");
                 }
             }
-            else if (args[0].equalsIgnoreCase("statSet") && p.hasPermission("footcube.admin")) {
+            else if (args[0].equalsIgnoreCase("statSet") && p.hasPermission("pfootcube.admin")) {
                 if (args.length < 4) {
-                    p.sendMessage(ChatColor.AQUA + "/fc statSet [Player] [Stat] [Amount" + this.or + "clear]");
+                    p.sendMessage(ChatColor.AQUA + "/fc statSet [Igrac] [Statistika] [Kolicina" + this.or + "ocisti(clear)]");
                 }
                 else if (this.uuidConverter.hasValue(args[1])) {
                     int amount = 0;
@@ -514,21 +545,24 @@ public class Organization implements Listener
                         this.store.put(uuid2, amount);
                     }
                     else {
-                        p.sendMessage(ChatColor.RED + args[2] + " is not a stat, choose from:");
+                        p.sendMessage(ChatColor.DARK_RED + args[2] + " nije stats, bira od:");
                         p.sendMessage(ChatColor.GRAY + "wins, matches, ties, goals, streak, store, all");
                     }
                 }
                 else {
-                    p.sendMessage(ChatColor.RED + args[1] + " does not have an account");
+                    p.sendMessage(ChatColor.DARK_AQUA + args[1] + " does not have an account");
                 }
             }
-            else if (args[0].equalsIgnoreCase("setuparena") && p.hasPermission("footcube.admin")) {
+            else if (args[0].equalsIgnoreCase("setuparena") && p.hasPermission("pfootcube.admin")) {
                 if (this.setupGuy == null) {
                     if (args.length < 2) {
-                        p.sendMessage(ChatColor.RED + "You need to specify the type of arena");
-                        p.sendMessage(ChatColor.AQUA + "/fc setuparena [3v3" + this.or + "4v4]");
+                        p.sendMessage(ChatColor.RED + "Specifikuj vrstu arene.");
+                        p.sendMessage(ChatColor.AQUA + "/fc setuparena [2v2/3v3/4v4]");
                     }
                     else {
+                        if (args[1].equalsIgnoreCase("2v2")) {
+                            this.setupType = 2;
+                        }
                         if (args[1].equalsIgnoreCase("3v3")) {
                             this.setupType = 3;
                         }
@@ -536,37 +570,39 @@ public class Organization implements Listener
                             this.setupType = 4;
                         }
                         else {
-                            p.sendMessage(ChatColor.RED + args[1] + " is not a valid arena type");
-                            p.sendMessage(ChatColor.AQUA + "/fc setuparena [3v3" + this.or + "4v4]");
+                            p.sendMessage(ChatColor.RED + args[1] + " nije validna vrsta arene.");
+                            p.sendMessage(ChatColor.AQUA + "/fc setuparena [2v2/3v3/4v4]");
                         }
                         if (this.setupType > 0) {
                             this.setupGuy = p.getName();
-                            p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "You just started to setup an arena");
-                            p.sendMessage(ChatColor.GREEN + "If you got here by accident, do " + ChatColor.AQUA + "/fc undo");
-                            p.sendMessage(ChatColor.GREEN + "Step 1: Stand in the middle block behind the line " + "of the blue goal and look at the red goal, then do " + ChatColor.AQUA + "/fc set");
+                            p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "Poceo si da podesavas arenu.");
+                            p.sendMessage(ChatColor.GREEN + "Ako si greskom napisao /fc setuparena, napisi " + ChatColor.AQUA + "/fc undo");
+                            p.sendMessage(ChatColor.GREEN + "Tutorial: Stani u sredinu blok-a gola pa posle stani iza linije u golu " + "plavog gola pa pogledaj ga crvenom golu, pa napisi " + ChatColor.AQUA + "/fc set");
                         }
                     }
                 }
                 else {
-                    p.sendMessage(ChatColor.RED + this.setupGuy + " is already setting up an arena");
+                    p.sendMessage(ChatColor.RED + this.setupGuy + " vec podesava arene.");
                 }
             }
-            else if (args[0].equalsIgnoreCase("cleararenas") && p.hasPermission("footcube.admin")) {
+            else if (args[0].equalsIgnoreCase("cleararenas") && p.hasPermission("pfootcube.admin")) {
                 final FileConfiguration cfg = this.plugin.getConfig();
                 cfg.set("arenas", (Object)null);
+                cfg.addDefault("arenas.2v2.amount", (Object)0);
                 cfg.addDefault("arenas.3v3.amount", (Object)0);
                 cfg.addDefault("arenas.4v4.amount", (Object)0);
                 cfg.options().copyDefaults(true);
                 this.plugin.saveConfig();
+                this.matches2v2 = new Match[0];
                 this.matches3v3 = new Match[0];
                 this.matches4v4 = new Match[0];
-                p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "you succesfully wiped all arenas");
+                p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "Uspesno si ocistio sve arene.");
             }
             else if (args[0].equalsIgnoreCase("set") && this.setupGuy == p.getName()) {
                 if (this.setupLoc == null) {
                     this.setupLoc = p.getLocation();
-                    p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "First location succesfully set");
-                    p.sendMessage(ChatColor.GREEN + "Now do the same for the red goal");
+                    p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "Prva lokacija uspesno namestena.");
+                    p.sendMessage(ChatColor.GREEN + "Uradi isto takodje za crveni gol.");
                 }
                 else {
                     final FileConfiguration cfg = this.plugin.getConfig();
@@ -593,95 +629,78 @@ public class Organization implements Listener
                     this.setupGuy = null;
                     this.setupType = 0;
                     this.setupLoc = null;
-                    p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "You succesfully setup the arena");
+                    p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "Tutorijal: Uspesno si podesio arene.");
                 }
             }
             else {
                 success = false;
             }
             if (!success) {
-                p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GOLD + "List of commands with /fc");
-                p.sendMessage(ChatColor.AQUA + "/fc join [3v3" + this.or + "4v4]");
-                p.sendMessage(ChatColor.AQUA + "/fc team [3v3" + this.or + "4v4] [player]");
-                p.sendMessage(ChatColor.AQUA + "/fc team accept/decline/cancel");
-                p.sendMessage(ChatColor.AQUA + "/fc group");
-                p.sendMessage(ChatColor.AQUA + "/fc takeplace");
-                p.sendMessage(ChatColor.AQUA + "/fc stats");
-                p.sendMessage(ChatColor.AQUA + "/fc store");
-                p.sendMessage(ChatColor.AQUA + "/fc best");
-                if (p.hasPermission("footcube.admin")) {
-                    p.sendMessage(String.valueOf(this.adminString) + ChatColor.AQUA + "/fc setuparena [3v3" + this.or + "4v4]");
+                p.sendMessage(String.valueOf(this.pluginString) + ChatColor.WHITE + "Lista dostupnih Komandi." + ChatColor.GOLD + "/" + ChatColor.YELLOW + "fc");
+                p.sendMessage(ChatColor.YELLOW + "/fc join [2v2/3v3/4v4]");
+                p.sendMessage(ChatColor.YELLOW + "/fc takeplace");
+                p.sendMessage(ChatColor.YELLOW + "/fc stats");
+                p.sendMessage(ChatColor.YELLOW + "/fc best");
+                if (p.hasPermission("pfootcube.admin")) {
+                    p.sendMessage(String.valueOf(this.adminString) + ChatColor.AQUA + "/fc setuparena [2v2/3v3/4v4]");
                     p.sendMessage(String.valueOf(this.adminString) + ChatColor.AQUA + "/fc cleararenas");
                 }
             }
         }
     }
-    
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onInventoryClick(final InventoryClickEvent e) {
-        if (e.getInventory().getTitle().equalsIgnoreCase("Upgrade your skills")) {
-            final Player p = (Player)e.getWhoClicked();
-            final Inventory inv = e.getInventory();
-            final ItemStack money = this.createComplexItem(Material.EMERALD, "You currently have #" + this.economy.getBalance(p.getName()), new String[] { "You get #15 for winning", "You get #5 for ending tied", "You get #10 for scoring" });
-            inv.setItem(0, money);
-            this.buy(p, inv.getItem(e.getSlot()).getType(), Material.REDSTONE, 5, 50, 10, new String[] { "Current charge speed is " + (110 + 10 * this.getStoreNumber(p, 5)) + "%", "Buy another 10% for #" + Math.pow(2.0, this.getStoreNumber(p, 5) + 1) * 50.0 }, "Upgrade charge speed", inv, 2);
-            this.buy(p, inv.getItem(e.getSlot()).getType(), Material.GOLD_SWORD, 3, 50, 10, new String[] { "Current kick power is " + (105 + 5 * this.getStoreNumber(p, 3)) + "%", "Buy another 5% for #" + Math.pow(2.0, this.getStoreNumber(p, 3) + 1) * 50.0 }, "Upgrade kicking power", inv, 3);
-            this.buy(p, inv.getItem(e.getSlot()).getType(), Material.SUGAR, 1, 50, 10, new String[] { "Current speed cooldown time is " + (57 - 3 * this.getStoreNumber(p, 1)) + " seconds", "Reduce this by 2 seconds for #" + Math.pow(2.0, this.getStoreNumber(p, 1) + 1) * 50.0 }, "Reduce speed cooldown time", inv, 4);
-            this.buy(p, inv.getItem(e.getSlot()).getType(), Material.GOLD_BOOTS, 7, 2500, 1, new String[] { "Current speed level is " + (2 + this.getStoreNumber(p, 7)), "Upgrade to the next level for #" + Math.pow(2.0, this.getStoreNumber(p, 7) + 1) * 2500.0 }, "Upgrade speed boost", inv, 5);
-            this.buy(p, inv.getItem(e.getSlot()).getType(), Material.WATCH, 9, 1000, 5, new String[] { "Current speed length is " + (6 + this.getStoreNumber(p, 9)) + " seconds", "Add another second for #" + Math.pow(2.0, this.getStoreNumber(p, 9) + 1) * 1000.0 }, "Lengthen speed boost", inv, 6);
-            e.setCancelled(true);
-        }
-        if (!((Player)e.getWhoClicked()).hasPermission("footcube.admin")) {
-            e.setCancelled(true);
-        }
-    }
-    
+
     @EventHandler
     public void onSignChange(final SignChangeEvent e) {
-        if (e.getLine(0).equalsIgnoreCase("[FootCube]")) {
-            e.setLine(0, ChatColor.RED + "Use [fc]");
+        if (e.getLine(0).equalsIgnoreCase("[pFootcube]")) {
+            e.setLine(0, ChatColor.RED + "Koristi [fc]");
         }
-        if (e.getPlayer().hasPermission("footcube.admin") && e.getLine(0).equalsIgnoreCase("[fc]")) {
+        else if (e.getPlayer().hasPermission("pfootcube.admin") && e.getLine(0).equalsIgnoreCase("[fc]")) {
             if (e.getLine(1).equalsIgnoreCase("join")) {
+                if (e.getLine(2).equalsIgnoreCase("2v2")) {
+                    e.setLine(0, "[pFootCube]");
+                    e.setLine(1, ChatColor.AQUA + "join");
+                    e.setLine(2, ChatColor.GREEN + "2v2");
+                    e.setLine(3, "");
+                }
                 if (e.getLine(2).equalsIgnoreCase("3v3")) {
-                    e.setLine(0, "[FootCube]");
+                    e.setLine(0, "[pFootCube]");
                     e.setLine(1, ChatColor.AQUA + "join");
                     e.setLine(2, ChatColor.GREEN + "3v3");
                     e.setLine(3, "");
                 }
                 else if (e.getLine(2).equalsIgnoreCase("4v4")) {
-                    e.setLine(0, "[FootCube]");
+                    e.setLine(0, "[pFootCube]");
                     e.setLine(1, ChatColor.AQUA + "join");
                     e.setLine(2, ChatColor.GREEN + "4v4");
                     e.setLine(3, "");
                 }
             }
             else if (e.getLine(1).equalsIgnoreCase("stats")) {
-                e.setLine(0, "[FootCube]");
+                e.setLine(0, "[pFootcube]");
                 e.setLine(1, ChatColor.AQUA + "stats");
                 e.setLine(2, "See how much");
                 e.setLine(3, "you score & win");
             }
             else if (e.getLine(1).equalsIgnoreCase("cube")) {
-                e.setLine(0, "[FootCube]");
+                e.setLine(0, "[pFootcube]");
                 e.setLine(1, ChatColor.AQUA + "cube");
                 e.setLine(2, "Spawn a");
                 e.setLine(3, "cube");
             }
             else if (e.getLine(1).equalsIgnoreCase("store")) {
-                e.setLine(0, "[FootCube]");
+                e.setLine(0, "[pFootcube]");
                 e.setLine(1, ChatColor.AQUA + "store");
                 e.setLine(2, "Buy skill");
                 e.setLine(3, "upgrades");
             }
             else if (e.getLine(1).equalsIgnoreCase("money")) {
-                e.setLine(0, "[FootCube]");
+                e.setLine(0, "[pFootcube]");
                 e.setLine(1, ChatColor.AQUA + "money");
                 e.setLine(2, "Check your");
                 e.setLine(3, "balance");
             }
             else if (e.getLine(1).equalsIgnoreCase("highscores")) {
-                e.setLine(0, "[FootCube]");
+                e.setLine(0, "[pFootcube]");
                 e.setLine(1, ChatColor.AQUA + "highscores");
                 e.setLine(2, "Check all");
                 e.setLine(3, "highscores");
@@ -697,40 +716,40 @@ public class Organization implements Listener
             final Block cb = e.getClickedBlock();
             if (cb.getState() instanceof Sign) {
                 final Sign s = (Sign)cb.getState();
-                if (s.getLine(0).equalsIgnoreCase("[FootCube]")) {
+                if (s.getLine(0).equalsIgnoreCase("[pFootcube]")) {
                     if (s.getLine(1).equalsIgnoreCase(ChatColor.AQUA + "join")) {
                         if (this.waitingTeamPlayers.contains(p)) {
-                            p.sendMessage(ChatColor.RED + "You are in a team, you cannot join a match");
+                            p.sendMessage(ChatColor.RED + "U timu si nemozes uci u utakmicu.");
                             return;
                         }
-                        if (s.getLine(2).equalsIgnoreCase(ChatColor.GREEN + "3v3")) {
-                            this.matches3v3[this.lobby3v3].join(p, false);
-                            this.waitingPlayers.put(p.getName(), 3);
-                            this.removeTeam(p);
+                            if (s.getLine(2).equalsIgnoreCase(ChatColor.GREEN + "2v2")) {
+                                this.matches2v2[this.lobby2v2].join(p, true);
+                                this.waitingPlayers.put(p.getName(), 2);
+                                this.removeTeam(p);
+                            } else if (s.getLine(2).equalsIgnoreCase(ChatColor.GREEN + "3v3")) {
+                                this.matches3v3[this.lobby3v3].join(p, true);
+                                this.waitingPlayers.put(p.getName(), 3);
+                                this.removeTeam(p);
+                            } else {
+                                this.matches4v4[this.lobby4v4].join(p, true);
+                                this.waitingPlayers.put(p.getName(), 4);
+                                this.removeTeam(p);
+                            }
                         }
-                        else {
-                            this.matches4v4[this.lobby4v4].join(p, false);
-                            this.waitingPlayers.put(p.getName(), 4);
-                            this.removeTeam(p);
-                        }
-                    }
                     else if (s.getLine(1).equalsIgnoreCase(ChatColor.AQUA + "stats")) {
                         this.checkStats(p.getUniqueId().toString(), p);
                     }
                     else if (s.getLine(1).equalsIgnoreCase(ChatColor.AQUA + "cube")) {
-                        if (this.practiceBalls < 5) {
+                        if (this.practiceBalls < 10) {
                             ++this.practiceBalls;
                             this.plugin.spawnCube(p.getLocation().add(new Vector(0, 1, 0)));
                         }
                         else {
-                            p.sendMessage(ChatColor.RED + "There already are enough cubes");
+                            p.sendMessage(ChatColor.RED + "Ima vec dovoljno lopti.");
                         }
                     }
-                    else if (s.getLine(1).equalsIgnoreCase(ChatColor.AQUA + "store")) {
-                        this.openStore(p);
-                    }
                     else if (s.getLine(1).equalsIgnoreCase(ChatColor.AQUA + "money")) {
-                        p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "You currently have #" + this.economy.getBalance(p.getName()));
+                        p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "Trenutno imas €" + this.economy.getBalance(p.getName()));
                     }
                     else if (s.getLine(1).equalsIgnoreCase(ChatColor.AQUA + "highscores")) {
                         this.updateHighscores(p);
@@ -769,14 +788,14 @@ public class Organization implements Listener
         }
         if (this.team.containsKey(p)) {
             final Player player = this.team.get(p);
-            player.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + p.getName() + " declined your team request");
+            player.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + p.getName() + " je odbio zahtev za timovanje.");
             this.teamType.remove(player);
             this.teamReverse.remove(player);
             this.team.remove(p);
         }
         else if (this.teamReverse.containsKey(p)) {
             final Player player = this.teamReverse.get(p);
-            player.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + p.getName() + " cancelled his request to team with you");
+            player.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + p.getName() + " je odbio vas zahteb za timovanje.");
             this.teamType.remove(p);
             this.teamReverse.remove(p);
             this.team.remove(player);
@@ -785,14 +804,14 @@ public class Organization implements Listener
             for (int i = 0; i < this.waitingTeams.length; ++i) {
                 if (this.waitingTeams[i][0] == p) {
                     final Player player2 = this.waitingTeams[i][1];
-                    player2.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "Your team mate left, the teaming got cancelled");
+                    player2.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "Tvoj igrac je izasao, timovanje otkazano!");
                     this.waitingTeams = this.reduceArray(this.waitingTeams, p);
                     this.waitingTeamPlayers.remove(p);
                     this.waitingTeamPlayers.remove(player2);
                 }
                 else if (this.waitingTeams[i][1] == p) {
                     final Player player2 = this.waitingTeams[i][0];
-                    player2.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "Your team mate left, the teaming got cancelled");
+                    player2.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "Tvoj igrac je izasao, timovanje otkazano!");
                     this.waitingTeams = this.reduceArray(this.waitingTeams, p);
                     this.waitingTeamPlayers.remove(p);
                     this.waitingTeamPlayers.remove(player2);
@@ -805,19 +824,32 @@ public class Organization implements Listener
     public void onChat(final PlayerChatEvent e) {
         final Player p = e.getPlayer();
         if (!this.global.contains(p)) {
-            if (ChatColor.stripColor(e.getMessage()).split(" ")[0].equalsIgnoreCase("G>")) {
-                p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "Use " + ChatColor.AQUA + "/g [message] " + ChatColor.GREEN + "for global chatting");
+            if (ChatColor.stripColor(e.getMessage()).split(" ")[0].equalsIgnoreCase("GLOBAL CHAT > ")) {
+                p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GREEN + "Koristi " + ChatColor.AQUA + "/g [Poruka] " + ChatColor.GREEN + "za globalni chat");
             }
             if (this.waitingPlayers.containsKey(p.getName()) || this.playingPlayers.contains(p.getName())) {
                 Match m = null;
-                Match[] matches3v3;
-                for (int length = (matches3v3 = this.matches3v3).length, i = 0; i < length; ++i) {
-                    final Match match = matches3v3[i];
+
+                Match[] matches2v2;
+                for (int length = (matches2v2 = this.matches2v2).length, i = 0; i < length; ++i) {
+                    final Match match = matches2v2[i];
                     if (match.isRed.containsKey(p)) {
                         m = match;
                         break;
                     }
                 }
+
+                if (m == null) {
+                    Match[] matches3v3;
+                    for (int length = (matches3v3 = this.matches3v3).length, i = 0; i < length; ++i) {
+                        final Match match = matches3v3[i];
+                        if (match.isRed.containsKey(p)) {
+                            m = match;
+                            break;
+                        }
+                    }
+                }
+
                 if (m == null) {
                     Match[] matches4v4;
                     for (int length2 = (matches4v4 = this.matches4v4).length, j = 0; j < length2; ++j) {
@@ -828,6 +860,7 @@ public class Organization implements Listener
                         }
                     }
                 }
+                // DA
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     if (!this.spy.contains(player) && !m.isRed.containsKey(player)) {
                         e.getRecipients().remove(player);
@@ -851,25 +884,25 @@ public class Organization implements Listener
     
     private void checkDonate(final Player p) {
         final String uuid = p.getUniqueId().toString();
-        if (p.hasPermission("footcube.god")) {
+        if (p.hasPermission("pfootcube.god")) {
             this.donate(p, uuid, 5, 5, 5);
         }
-        else if (p.hasPermission("footcube.herobrine")) {
+        else if (p.hasPermission("pfootcube.herobrine")) {
             this.donate(p, uuid, 4, 4, 5);
         }
-        else if (p.hasPermission("footcube.titan")) {
+        else if (p.hasPermission("pfootcube.titan")) {
             this.donate(p, uuid, 4, 3, 4);
         }
-        else if (p.hasPermission("footcube.legend")) {
+        else if (p.hasPermission("pfootcube.legend")) {
             this.donate(p, uuid, 3, 3, 3);
         }
-        else if (p.hasPermission("footcube.premium")) {
+        else if (p.hasPermission("pfootcube.premium")) {
             this.donate(p, uuid, 3, 2, 3);
         }
-        else if (p.hasPermission("footcube.vipplus")) {
+        else if (p.hasPermission("pfootcube.vipplus")) {
             this.donate(p, uuid, 2, 2, 2);
         }
-        else if (p.hasPermission("footcube.vip")) {
+        else if (p.hasPermission("pfootcube.vip")) {
             this.donate(p, uuid, 2, 1, 2);
         }
     }
@@ -887,7 +920,22 @@ public class Organization implements Listener
     }
     
     public void matchStart(final int type) {
-        if (type == 3) {
+        // OVDE ISTO jebote
+        if (type == 2) {
+            for (int i = 0; i < this.matches2v2.length; ++i) {
+                if (this.matches2v2[i].phase == 1) {
+                    this.lobby2v2 = i;
+                    break;
+                }
+            }
+            for (int i = 0; i < this.waitingTeams.length; ++i) {
+                if (this.waitingTeams[i].length > 1 && this.matches2v2[this.lobby2v2].team(this.waitingTeams[i][0], this.waitingTeams[i][1])) {
+                    this.waitingTeamPlayers.remove(this.waitingTeams[i][0]);
+                    this.waitingTeamPlayers.remove(this.waitingTeams[i][1]);
+                    this.waitingTeams = this.reduceArray(this.waitingTeams, this.waitingTeams[i][0]);
+                }
+            }
+        } else if (type == 3) {
             for (int i = 0; i < this.matches3v3.length; ++i) {
                 if (this.matches3v3[i].phase == 1) {
                     this.lobby3v3 = i;
@@ -901,8 +949,7 @@ public class Organization implements Listener
                     this.waitingTeams = this.reduceArray(this.waitingTeams, this.waitingTeams[i][0]);
                 }
             }
-        }
-        else {
+        } else {
             for (int i = 0; i < this.matches4v4.length; ++i) {
                 if (this.matches4v4[i].phase == 1) {
                     this.lobby4v4 = i;
@@ -918,7 +965,7 @@ public class Organization implements Listener
             }
         }
     }
-    
+    // Promena ovde radjena xd
     public void playerLeaves(final Match m, final boolean red) {
         this.leftMatches = this.extendArray(this.leftMatches, m);
         this.leftPlayerIsRed = this.extendArray(this.leftPlayerIsRed, red);
@@ -946,12 +993,12 @@ public class Organization implements Listener
             for (Player p : Bukkit.getOnlinePlayers()) {
                 if (!this.playingPlayers.contains(p.getName()) && !this.waitingPlayers.containsKey(p.getName())) {
                     if (m.time.getScore() < 0) {
-                        p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GOLD + "ANNOUNCEMENT: " + ChatColor.GREEN + "A player left a " + m.type + "v" + m.type + " match during discussion phase");
+                        p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GOLD + "OBAVESTENJE: " + ChatColor.GREEN + "Igrac je izaso iz " + m.type + "v" + m.type + " utakmicu tokom pripremne faze.");
                     }
                     else {
-                        p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GOLD + "ANNOUNCEMENT: " + ChatColor.GREEN + "A player left a " + m.type + "v" + m.type + " match, he was running " + v + " with " + m.time.getScore() + " seconds to play");
+                        p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GOLD + "OBAVESTENJE: " + ChatColor.GREEN + "Igrac je izaso iz " + m.type + "v" + m.type + " utakmicu, igrao je sa " + v + " preostalih " + m.time.getScore() + " sekundi igre..");
                     }
-                    p.sendMessage(ChatColor.GREEN + "Use " + ChatColor.AQUA + "/fc takeplace" + ChatColor.GREEN + " to take his place");
+                    p.sendMessage(ChatColor.GREEN + "Napisi " + ChatColor.AQUA + "/fc takeplace" + ChatColor.GREEN + " da preuzmes njegovo mesto!");
                 }
             }
         }
@@ -992,6 +1039,11 @@ public class Organization implements Listener
     }
     
     public void ballTouch(final Player p) {
+        Match[] matches2v2;
+        for (int lenght = (matches2v2 = this.matches2v2).length, f = 0; f < lenght; ++f) {
+            final Match m = matches2v2[f];
+            m.kick(p);
+        }
         Match[] matches3v3;
         for (int length = (matches3v3 = this.matches3v3).length, i = 0; i < length; ++i) {
             final Match m = matches3v3[i];
@@ -1033,18 +1085,7 @@ public class Organization implements Listener
         final int storeContent = this.store.get(p.getUniqueId().toString());
         return (int)((storeContent % Math.pow(10.0, digit + 1) - storeContent % Math.pow(10.0, digit - 1)) / Math.pow(10.0, digit - 1));
     }
-    
-    private void buy(final Player p, final Material clickedMaterial, final Material material, final int storeNumber, final int standardCost, final int maxLevel, final String[] lure, final String name, final Inventory inv, final int invSlot) {
-        if (clickedMaterial.equals((Object)material) && this.getStoreNumber(p, storeNumber) < maxLevel && this.economy.getBalance(p.getName()) >= standardCost * Math.pow(2.0, this.getStoreNumber(p, storeNumber))) {
-            this.economy.withdrawPlayer(p.getName(), standardCost * Math.pow(2.0, this.getStoreNumber(p, storeNumber)));
-            this.store.put(p.getUniqueId().toString(), (int)(this.store.get(p.getUniqueId().toString()) + Math.pow(10.0, storeNumber - 1)));
-            if (this.getStoreNumber(p, storeNumber) >= maxLevel) {
-                lure[1] = "This skill is now at max";
-            }
-            final ItemStack is = this.createComplexItem(material, name, lure);
-            inv.setItem(invSlot, is);
-        }
-    }
+
     
     private void removeTeam(final Player p) {
         if (this.team.containsKey(p)) {
@@ -1117,15 +1158,28 @@ public class Organization implements Listener
     
     private void addArena(final int type, final Location b, final Location r) {
         final Location m = new Location(b.getWorld(), (b.getX() + r.getX()) / 2.0, (b.getY() + r.getY()) / 2.0 + 2.0, (b.getZ() + r.getZ()) / 2.0);
-        if (type == 3) {
+        if (type == 2) {
+            this.matches2v2 = this.extendArray(this.matches2v2, new Match(this, this.plugin, 2, b, r, m, this.matches2v2.length + this.matches3v3.length + this.matches4v4.length));
+        } else if (type == 3) {
             this.matches3v3 = this.extendArray(this.matches3v3, new Match(this, this.plugin, 3, b, r, m, this.matches3v3.length + this.matches4v4.length));
-        }
-        else {
+        } else {
             this.matches4v4 = this.extendArray(this.matches4v4, new Match(this, this.plugin, 4, b, r, m, this.matches3v3.length + this.matches4v4.length));
         }
     }
     
     private void loadArenas(final FileConfiguration cfg) {
+        for (int i = 1; i <= cfg.getInt("arenas.2v2.amount"); ++i) {
+            final World world = this.plugin.getServer().getWorld(cfg.getString("arenas.world"));
+            final String blue = "arenas.2v2." + i + ".blue.";
+            final String red = "arenas.2v2." + i + ".red.";
+            final Location b = new Location(world, cfg.getDouble(String.valueOf(blue) + "x"), cfg.getDouble(String.valueOf(blue) + "y"), cfg.getDouble(String.valueOf(blue) + "z"));
+            b.setPitch((float)cfg.getDouble(String.valueOf(blue) + "pitch"));
+            b.setYaw((float)cfg.getDouble(String.valueOf(blue) + "yaw"));
+            final Location r = new Location(world, cfg.getDouble(String.valueOf(red) + "x"), cfg.getDouble(String.valueOf(red) + "y"), cfg.getDouble(String.valueOf(red) + "z"));
+            r.setPitch((float)cfg.getDouble(String.valueOf(red) + "pitch"));
+            r.setYaw((float)cfg.getDouble(String.valueOf(red) + "yaw"));
+            this.addArena(3, b, r);
+        }
         for (int i = 1; i <= cfg.getInt("arenas.3v3.amount"); ++i) {
             final World world = this.plugin.getServer().getWorld(cfg.getString("arenas.world"));
             final String blue = "arenas.3v3." + i + ".blue.";
@@ -1272,60 +1326,20 @@ public class Organization implements Listener
                     break;
                 }
             }
-            asker.sendMessage(String.valueOf(this.pluginString) + ChatColor.GOLD + Your + " statistics:");
-            asker.sendMessage(ChatColor.GRAY + You + " " + have + " played " + m + " matches");
-            asker.sendMessage(ChatColor.GRAY + You + " " + have + " had " + w + " wins, " + l + " losses and " + t + " ties");
+            asker.sendMessage(String.valueOf(this.pluginString) + ChatColor.GOLD + Your + " Statistika:");
+            asker.sendMessage(ChatColor.GRAY + "Ti si igrao" + m + " utakmica.");
+            asker.sendMessage(ChatColor.GRAY + "Ti si imao" + w + " pobeda, " + l + " izgubljenih i " + t + " izjednacenih");
             if (w > 0) {
-                asker.sendMessage(ChatColor.GRAY + "This makes " + mw + " matches per win");
+                asker.sendMessage(ChatColor.GRAY + "To sve ukupno imas " + mw + " utakmica pobedjenih");
             }
-            asker.sendMessage(ChatColor.GRAY + Your + " longest win streak is " + s + " wins in a row");
-            asker.sendMessage(ChatColor.GRAY + "In these matches " + you + " made " + g + " goals");
-            asker.sendMessage(ChatColor.GRAY + "This makes " + gm + " goals per match");
-            asker.sendMessage(ChatColor.GRAY + Your + " skill level is now " + skillLevel + " which gives " + them + " rank '" + rang + "'");
+            asker.sendMessage(ChatColor.GRAY + "Tvoj" + " najveci dugi win streak je bio " + s + " pobeda u nizu.");
+            asker.sendMessage(ChatColor.GRAY + "U ovim utakmicama ti si postigao "  + g + " golova.");
+            asker.sendMessage(ChatColor.GRAY + "Sto znaci da si imao " + gm + " golova po utakmici");
+            asker.sendMessage(ChatColor.GRAY + " Tvoj skill level trenutno je. " + skillLevel + " sto ti daje " + " rank '" + rang + "'");
         }
         else {
-            asker.sendMessage(ChatColor.RED + You + " " + have + "n't played any matches yet");
+            asker.sendMessage(ChatColor.DARK_RED + "Nisi nazalost igrao ni jednu utakmicu.");
         }
-    }
-    
-    private void openStore(final Player p) {
-        this.checkDonate(p);
-        final Inventory inv = Bukkit.createInventory((InventoryHolder)p, 9, "Upgrade your skills");
-        String[] chargeLure = { "Current charge speed is " + (100 + 10 * this.getStoreNumber(p, 5)) + "%", "Buy another 10% for #" + Math.pow(2.0, this.getStoreNumber(p, 5)) * 50.0 };
-        String[] powerLure = { "Current kicking power is " + (100 + 5 * this.getStoreNumber(p, 3)) + "%", "Buy another 5% for #" + Math.pow(2.0, this.getStoreNumber(p, 3)) * 50.0 };
-        String[] speedLure = { "Current cooldown time is " + (60 - 3 * this.getStoreNumber(p, 1)) + " seconds", "Reduce this by 3 seconds for #" + Math.pow(2.0, this.getStoreNumber(p, 1)) * 50.0 };
-        String[] levelLure = { "Current speed level is " + (1 + this.getStoreNumber(p, 7)), "Add another level for #2500" };
-        String[] lengthLure = { "Current speed length is " + (5 + this.getStoreNumber(p, 9)) + " seconds", "Add another second for #" + Math.pow(2.0, this.getStoreNumber(p, 9)) * 1000.0 };
-        if (this.getStoreNumber(p, 5) >= 10) {
-            chargeLure = new String[] { chargeLure[0], "This skill is now at max" };
-        }
-        if (this.getStoreNumber(p, 3) >= 10) {
-            powerLure = new String[] { powerLure[0], "This skill is now at max" };
-        }
-        if (this.getStoreNumber(p, 1) >= 10) {
-            speedLure = new String[] { speedLure[0], "This skill is now at max" };
-        }
-        if (this.getStoreNumber(p, 7) >= 1) {
-            levelLure = new String[] { levelLure[0], "This skill is now at max" };
-        }
-        if (this.getStoreNumber(p, 9) >= 5) {
-            lengthLure = new String[] { lengthLure[0], "This skill is now at max" };
-        }
-        final ItemStack charge = this.createComplexItem(Material.REDSTONE, "Upgrade charge speed", chargeLure);
-        final ItemStack power = this.createComplexItem(Material.GOLD_SWORD, "Upgrade kicking power", powerLure);
-        final ItemStack speed = this.createComplexItem(Material.SUGAR, "Reduce speed cooldown time", speedLure);
-        final ItemStack level = this.createComplexItem(Material.GOLD_BOOTS, "Upgrade speed boost", levelLure);
-        final ItemStack length = this.createComplexItem(Material.WATCH, "Lengthen speed boost", lengthLure);
-        final ItemStack money = this.createComplexItem(Material.EMERALD, "You currently have #" + this.economy.getBalance(p.getName()), new String[] { "You get #15 for winning", "You get #5 for ending tied", "You get #10 for scoring" });
-        final ItemStack donatingInfo = this.createComplexItem(Material.BOOK, "Donate for instant skill upgrades", new String[] { "Donate at www.mcorigins.com" });
-        inv.setItem(0, money);
-        inv.setItem(2, charge);
-        inv.setItem(3, power);
-        inv.setItem(4, speed);
-        inv.setItem(5, level);
-        inv.setItem(6, length);
-        inv.setItem(8, donatingInfo);
-        p.openInventory(inv);
     }
     
     private void updateHighscores(final Player p) {
@@ -1344,6 +1358,9 @@ public class Organization implements Listener
     }
     
     private void update() {
+        for (int i = 0; i < this.matches2v2.length; ++i) {
+            this.matches2v2[i].update();
+        }
         for (int i = 0; i < this.matches3v3.length; ++i) {
             this.matches3v3[i].update();
         }
@@ -1375,12 +1392,12 @@ public class Organization implements Listener
             for (Player p : Bukkit.getOnlinePlayers()) {
                 if (!this.playingPlayers.contains(p.getName()) && !this.waitingPlayers.containsKey(p.getName())) {
                     if (m.time.getScore() < 0) {
-                        p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GOLD + "ANNOUNCEMENT: " + ChatColor.GREEN + "A player left a " + m.type + "v" + m.type + " match during discussion phase");
+                        p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GOLD + "OBAVESTENJE: " + ChatColor.GREEN + "Igrac je napustio " + m.type + "v" + m.type + " utakmicu tokom faze zagrevanja.");
                     }
                     else {
-                        p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GOLD + "ANNOUNCEMENT: " + ChatColor.GREEN + "A player left a " + m.type + "v" + m.type + " match, he was running " + v + " with " + m.time.getScore() + " seconds to play");
+                        p.sendMessage(String.valueOf(this.pluginString) + ChatColor.GOLD + "OBAVESTENJE: " + ChatColor.GREEN + "Igrac je napustio " + m.type + "v" + m.type + " utakmicu, preostalo mu je vremena " + v + " jos " + m.time.getScore() + " sekudni za igrat.");
                     }
-                    p.sendMessage(ChatColor.GREEN + "Use " + ChatColor.AQUA + "/fc takeplace" + ChatColor.GREEN + " to take his place");
+                    p.sendMessage(ChatColor.GREEN + "Koristi " + ChatColor.AQUA + "/fc takeplace" + ChatColor.GREEN + " da mu preuzmes mesto");
                 }
             }
         }

@@ -45,8 +45,18 @@ public class pFootcube extends JavaPlugin implements Listener
     private HashMap<String, Double> speed;
     private HashMap<String, Double> charges;
     private Organization organization;
-    
+
     public pFootcube() {
+
+        getLogger().info("888888  888888   8888");
+        getLogger().info("88  88  88      88  88");
+        getLogger().info("888888  888888  88 ");
+        getLogger().info("88      88      88  88");
+        getLogger().info("88      88       888");
+
+        getLogger().info("pFootcube se ucitava.");
+
+
         this.logger = Logger.getLogger("Minecraft");
         this.cubes = new HashSet<Slime>();
         this.velocities = new HashMap<UUID, Vector>();
@@ -54,12 +64,12 @@ public class pFootcube extends JavaPlugin implements Listener
         this.speed = new HashMap<String, Double>();
         this.charges = new HashMap<String, Double>();
     }
-    
+
     public void onDisable() {
         final PluginDescriptionFile pdfFile = this.getDescription();
         this.logger.info(String.valueOf(pdfFile.getName()) + " Has Been Disabled!");
     }
-    
+
     public void onEnable() {
         final PluginDescriptionFile pdfFile = this.getDescription();
         this.logger.info(String.valueOf(pdfFile.getName()) + " V" + pdfFile.getVersion() + " Has Been Enabled!");
@@ -71,12 +81,13 @@ public class pFootcube extends JavaPlugin implements Listener
             }
         }, 1L, 1L);
     }
-    
+
     public boolean onCommand(final CommandSender sender, final Command cmd, final String c, final String[] args) {
         this.organization.command(sender, cmd, c, args);
         final Player p = (Player)sender;
         if (cmd.getName().equalsIgnoreCase("cube") && p.getWorld().getDifficulty() != Difficulty.PEACEFUL) {
-            final Location loc = p.getLocation().add(0.0, -2.0, 0.0);
+            p.sendMessage(ChatColor.GREEN + "▎ " + ChatColor.WHITE + "Lopta uspesno stvorena.");
+            final Location loc = p.getLocation().add(0, 1, 0);
             this.spawnCube(loc);
         }
         if (cmd.getName().equalsIgnoreCase("clearCubes")) {
@@ -90,10 +101,10 @@ public class pFootcube extends JavaPlugin implements Listener
             if (i == 1) {
                 s = "";
             }
-            p.sendMessage(ChatColor.GRAY + "Cleared " + i + " cube" + s + ".");
+            p.sendMessage(ChatColor.GREEN + "▎ " + ChatColor.WHITE + "Obrisane " + i + " lopte.");
         }
         if (cmd.getName().equalsIgnoreCase("clearCube")) {
-            double distance = 999999.9;
+            double distance = 999999;
             Slime s2 = null;
             for (final Slime cube2 : this.cubes) {
                 if (this.getDistance(cube2.getLocation(), p.getLocation()) < distance) {
@@ -105,7 +116,7 @@ public class pFootcube extends JavaPlugin implements Listener
         }
         return false;
     }
-    
+
     @EventHandler
     public void onMove(final PlayerMoveEvent e) {
         final Location to = e.getTo();
@@ -115,13 +126,13 @@ public class pFootcube extends JavaPlugin implements Listener
         final double z = Math.abs(to.getZ() - from.getZ());
         this.speed.put(e.getPlayer().getName(), Math.sqrt(x * x + y * y + z * z));
     }
-    
+
     @EventHandler
     public void onQuit(final PlayerQuitEvent e) {
         this.speed.remove(e.getPlayer().getName());
         this.charges.remove(e.getPlayer().getName());
     }
-    
+
     @EventHandler
     public void onUnloadChunk(final ChunkUnloadEvent e) {
         Entity[] entities;
@@ -132,7 +143,7 @@ public class pFootcube extends JavaPlugin implements Listener
             }
         }
     }
-    
+
     @EventHandler(priority = EventPriority.HIGH)
     public void onDamage(final EntityDamageEvent e) {
         if (e.getEntity() instanceof Slime && this.cubes.contains(e.getEntity())) {
@@ -142,7 +153,7 @@ public class pFootcube extends JavaPlugin implements Listener
             e.setDamage(0.0);
         }
     }
-    
+
     @EventHandler
     public void onRightClick(final PlayerInteractEntityEvent e) {
         final Entity entity = e.getRightClicked();
@@ -154,7 +165,7 @@ public class pFootcube extends JavaPlugin implements Listener
             this.organization.ballTouch(e.getPlayer());
         }
     }
-    
+
     @EventHandler
     public void onSneak(final PlayerToggleSneakEvent e) {
         final Player p = e.getPlayer();
@@ -166,7 +177,7 @@ public class pFootcube extends JavaPlugin implements Listener
             this.charges.remove(p.getName());
         }
     }
-    
+
     @EventHandler
     public void onSlamSlime(final EntityDamageByEntityEvent e) {
         if (e.getEntity() instanceof Slime && this.cubes.contains(e.getEntity()) && e.getDamager() instanceof Player && e.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK) {
@@ -174,7 +185,7 @@ public class pFootcube extends JavaPlugin implements Listener
             final Player p = (Player)e.getDamager();
             double charge = 1.0;
             if (this.charges.containsKey(p.getName())) {
-                charge += this.charges.get(p.getName()) * 7.0;
+                charge += this.charges.get(p.getName()) * 3.5;
             }
             final double power = this.speed.get(p.getName()) * 2.0 + 0.4;
             final Vector kick = p.getLocation().getDirection().normalize().multiply(power * charge * (1.0 + 0.05 * this.organization.getStoreNumber(p, 3))).setY(0.3);
@@ -184,7 +195,7 @@ public class pFootcube extends JavaPlugin implements Listener
             e.setCancelled(true);
         }
     }
-    
+
     public Slime spawnCube(final Location loc) {
         final Slime cube = (Slime)loc.getWorld().spawnEntity(loc, EntityType.SLIME);
         cube.setRemoveWhenFarAway(false);
@@ -192,7 +203,7 @@ public class pFootcube extends JavaPlugin implements Listener
         this.cubes.add(cube);
         return cube;
     }
-    
+
     private double getDistance(final Location locA, final Location locB) {
         locA.add(0.0, -1.0, 0.0);
         final double dx = Math.abs(locA.getX() - locB.getX());
@@ -203,7 +214,7 @@ public class pFootcube extends JavaPlugin implements Listener
         final double dz = Math.abs(locA.getZ() - locB.getZ());
         return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
-    
+
     private void update() {
         if (this.kicked.size() > 0) {
             for (final String s : this.kicked.keySet()) {
@@ -214,10 +225,10 @@ public class pFootcube extends JavaPlugin implements Listener
         }
         Collection<? extends Player> onlinePlayers;
         for (int length3 = (onlinePlayers = getServer().getOnlinePlayers()).size(), k = 0; k < length3; k++) {
-          Player p = (Player)onlinePlayers.toArray()[k];
-          p.setHealth(20.0D);
-          p.setSaturation(100.0F);
-          p.setExhaustion(20.0F);
+            Player p = (Player)onlinePlayers.toArray()[k];
+            p.setHealth(20.0D);
+            p.setSaturation(100.0F);
+            p.setExhaustion(20.0F);
         }
         for (final String s : this.charges.keySet()) {
             final Player p2 = this.getServer().getPlayer(s);
@@ -238,7 +249,7 @@ public class pFootcube extends JavaPlugin implements Listener
                 final Vector newV = cube.getVelocity();
                 Collection<? extends Player> onlinePlayers2;
                 for (int length2 = (onlinePlayers2 = getServer().getOnlinePlayers()).size(), j = 0; j < length2; j++) {
-                	Player p3 = (Player)onlinePlayers2.toArray()[j];
+                    Player p3 = (Player)onlinePlayers2.toArray()[j];
                     final double delta = this.getDistance(cube.getLocation(), p3.getLocation());
                     if (delta < 1.2) {
                         if (delta < 0.8 && newV.length() > 0.5) {
@@ -280,10 +291,10 @@ public class pFootcube extends JavaPlugin implements Listener
                 if (sound) {
                     cube.getWorld().playSound(cube.getLocation(), Sound.SLIME_WALK, 1.0f, 1.0f);
                 }
-                cube.getWorld().playSound(cube.getLocation(), Sound.SLIME_WALK, 1.0F, 1.0F); 
+                cube.getWorld().playSound(cube.getLocation(), Sound.SLIME_WALK, 1.0F, 1.0F);
                 Collection<? extends Player> onlinePlayers3;
                 for (int i = (onlinePlayers3 = getServer().getOnlinePlayers()).size(), m = 0; m < i; m++) {
-                  Player p3 = (Player)onlinePlayers3.toArray()[m];
+                    Player p3 = (Player)onlinePlayers3.toArray()[m];
                     final double delta = this.getDistance(cube.getLocation(), p3.getLocation());
                     if (delta < newV.length() * 1.3) {
                         final Vector loc = cube.getLocation().toVector();

@@ -1,6 +1,3 @@
-
-// 
-
 package com.maatijaa.pfootcube.misc;
 
 import com.maatijaa.pfootcube.core.Organization;
@@ -40,20 +37,21 @@ public class DisableCommands implements Listener
     
     public void command(final CommandSender sender, final Command cmd, final String c, final String[] args) {
         final Player p = (Player)sender;
-        if (cmd.getName().equalsIgnoreCase("commandDisabler") && p.hasPermission("footcube.admin")) {
+        if (cmd.getName().equalsIgnoreCase("commandDisabler") && p.hasPermission("pfootcube.admin")) {
             if (args.length < 1) {
-                p.sendMessage(ChatColor.AQUA + "/cd add [command]");
-                p.sendMessage(ChatColor.AQUA + "/cd remove [command]");
+                p.sendMessage(ChatColor.DARK_AQUA + "pFootcube Onesposobjivac komandi.");
+                p.sendMessage(ChatColor.AQUA + "/cd add [Komanda]");
+                p.sendMessage(ChatColor.AQUA + "/cd remove [Komanda]");
                 p.sendMessage(ChatColor.AQUA + "/cd list");
             }
             else {
                 final FileConfiguration cfg = this.plugin.getConfig();
                 if (args[0].equalsIgnoreCase("add")) {
                     if (args.length < 2) {
-                        p.sendMessage(ChatColor.AQUA + "/cd add [command]");
+                        p.sendMessage(ChatColor.AQUA + "/cd add [Komanda]");
                     }
                     else if (this.commands.contains(args[1])) {
-                        p.sendMessage(ChatColor.RED + "This command was already added");
+                        p.sendMessage(ChatColor.RED + "Ova komanda je vec dodana.");
                     }
                     else {
                         this.commands.add(args[1]);
@@ -63,12 +61,12 @@ public class DisableCommands implements Listener
                         }
                         cfg.set("enabledCommands", (Object)cfgString);
                         this.plugin.saveConfig();
-                        p.sendMessage(ChatColor.GREEN + "You succesfully added command /" + args[1] + " to the list of disabled commands");
+                        p.sendMessage(ChatColor.GREEN + "Uspesno ste dodali komandu /" + args[1] + " na listu izkljucenih komandi.");
                     }
                 }
                 else if (args[0].equalsIgnoreCase("remove")) {
                     if (args.length < 2) {
-                        p.sendMessage(ChatColor.AQUA + "/cd remove [command]");
+                        p.sendMessage(ChatColor.AQUA + "/cd remove [Komanda]");
                     }
                     else if (this.commands.contains(args[1])) {
                         this.commands.remove(args[1]);
@@ -78,14 +76,14 @@ public class DisableCommands implements Listener
                         }
                         cfg.set("enabledCommands", (Object)cfgString);
                         this.plugin.saveConfig();
-                        p.sendMessage(ChatColor.GREEN + "You succesfully removed command /" + args[1] + " from the list of disabled commands");
+                        p.sendMessage(ChatColor.GREEN + "Uspesno si uklonio komandu /" + args[1] + " iz liste iskljucenih komandi.");
                     }
                     else {
-                        p.sendMessage(ChatColor.RED + "This command wasn't even added");
+                        p.sendMessage(ChatColor.RED + "Ova komanda nije ni dodata bila.");
                     }
                 }
                 else if (args[0].equalsIgnoreCase("list")) {
-                    p.sendMessage(ChatColor.GOLD + "List of disabled commands:");
+                    p.sendMessage(ChatColor.GOLD + "Lista onespobljenih komandi.:");
                     for (final String s2 : this.commands) {
                         p.sendMessage(ChatColor.GRAY + s2);
                     }
@@ -97,7 +95,7 @@ public class DisableCommands implements Listener
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPreprocess(final PlayerCommandPreprocessEvent e) {
         final Player p = e.getPlayer();
-        if (!p.hasPermission("footcube.admin") && (this.organization.playingPlayers.contains(p.getName()) || this.organization.waitingPlayers.containsKey(p.getName()))) {
+        if (!p.hasPermission("pfootcube.admin") && (this.organization.playingPlayers.contains(p.getName()) || this.organization.waitingPlayers.containsKey(p.getName()))) {
             final String cmd = e.getMessage().substring(1).split(" ")[0];
             boolean allowed = true;
             for (final String command : this.commands) {
@@ -107,7 +105,7 @@ public class DisableCommands implements Listener
                 }
             }
             if (!allowed) {
-                p.sendMessage(ChatColor.RED + "You cannot use this command during a match");
+                p.sendMessage(ChatColor.RED + "Nemozes koristiti ovu komandu tokom utakmice.");
                 e.setCancelled(true);
             }
         }
