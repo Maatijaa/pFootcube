@@ -1,15 +1,15 @@
-
-
 package com.maatijaa.pfootcube;
 
 import com.maatijaa.pfootcube.core.Organization;
-import org.bukkit.EntityEffect;
+import com.maatijaa.pfootcube.managers.PlayerManager;
+import com.maatijaa.pfootcube.system.Particles;
+import org.bukkit.*;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
-import org.bukkit.Sound;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -18,9 +18,6 @@ import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.Location;
-import org.bukkit.ChatColor;
-import org.bukkit.Difficulty;
 import org.bukkit.entity.Player;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -39,14 +36,17 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class pFootcube extends JavaPlugin implements Listener
 {
     private Logger logger;
-    private HashSet<Slime> cubes;
+    public HashSet<Slime> cubes;
     private HashMap<UUID, Vector> velocities;
     private HashMap<String, Long> kicked;
     private HashMap<String, Double> speed;
     private HashMap<String, Double> charges;
     private Organization organization;
+    private Particles particles;
+    private Particle particle;
 
     public pFootcube() {
+
 
         getLogger().info("888888  888888   8888");
         getLogger().info("88  88  88      88  88");
@@ -71,17 +71,30 @@ public class pFootcube extends JavaPlugin implements Listener
     }
 
     public void onEnable() {
+
+        getLogger().info("Starting pFootcube..");
+
+        getLogger().info("Loading Commands...");
+        registerCommands();
+        getLogger().info("Commands succsesfully loaded.");
+
+        getLogger().info("Loading Listeners");
+        registerListeners();
+
+        getLogger().info("pFootcube uspesno pokrenut.");
+
         final PluginDescriptionFile pdfFile = this.getDescription();
         this.logger.info(String.valueOf(pdfFile.getName()) + " V" + pdfFile.getVersion() + " Has Been Enabled!");
         this.getServer().getPluginManager().registerEvents((Listener)this, (Plugin)this);
         this.organization = new Organization(this);
+        this.particles = new Particles(this);
         this.getServer().getScheduler().scheduleSyncRepeatingTask((Plugin)this, (Runnable)new Runnable() {
             public void run() {
+                pFootcube.this.particles.cubeEffect();
                 pFootcube.this.update();
             }
-        }, 1L, 1L);
+        }, 0L, 0L);
     }
-
     public boolean onCommand(final CommandSender sender, final Command cmd, final String c, final String[] args) {
         this.organization.command(sender, cmd, c, args);
         final Player p = (Player)sender;
@@ -115,6 +128,16 @@ public class pFootcube extends JavaPlugin implements Listener
             s2.setHealth(0.0);
         }
         return false;
+    }
+
+    public void registerListeners() {
+        PluginManager pm = Bukkit.getPluginManager();
+        pm.registerEvents(new Particles(this), this);
+        pm.registerEvents(new PlayerManager(this), this);
+    }
+
+    public void registerCommands() {
+        getCommand("particles").setExecutor(new Particles(this));
     }
 
     @EventHandler

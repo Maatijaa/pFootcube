@@ -83,8 +83,8 @@ public class Organization implements Listener
     
     public Organization(final pFootcube pl) {
         this.highscores = null;
-        this.pluginString = ChatColor.DARK_AQUA + "FUT ";
-        this.adminString = ChatColor.AQUA + "FUT ADMIN ";
+        this.pluginString = ChatColor.DARK_AQUA + "▎ PFC ▎ ";
+        this.adminString = ChatColor.AQUA + "PFC ADMIN ";
         this.or = ChatColor.YELLOW + "|" + ChatColor.AQUA;
         this.setupGuy = null;
         this.setupType = 0;
@@ -636,7 +636,7 @@ public class Organization implements Listener
                 success = false;
             }
             if (!success) {
-                p.sendMessage(String.valueOf(this.pluginString) + ChatColor.WHITE + "Lista dostupnih Komandi." + ChatColor.GOLD + "/" + ChatColor.YELLOW + "fc");
+                p.sendMessage(String.valueOf(this.pluginString) + ChatColor.WHITE + "Lista dostupnih Komandi." + ChatColor.GOLD + " /" + ChatColor.YELLOW + "fc");
                 p.sendMessage(ChatColor.YELLOW + "/fc join [2v2/3v3/4v4]");
                 p.sendMessage(ChatColor.YELLOW + "/fc takeplace");
                 p.sendMessage(ChatColor.YELLOW + "/fc stats");
