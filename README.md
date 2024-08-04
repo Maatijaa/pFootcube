@@ -9,14 +9,19 @@
 
 # Informations
 
- *Original plugin Footcube is created by* **SmileyCraft**
+ *Original Footcube plugin is created by* **SmileyCraft**
  
+ **This plugin was made for use on Minecraft Football Server KornerCraft, so you will have to modify for your own use case.**
+
+
  *This plugin is modified by* **Maatijaa** 
 
  *This plugin is not* **FINISHED** *i still have to fix bugs that occur in this plugin.*
  
  ![](https://img.shields.io/github/license/Maatijaa/pFootcube)
+
  ![](https://img.shields.io/github/directory-file-count/Maatijaa/pFootcube)
+
  ![](https://img.shields.io/github/commit-activity/w/Maatijaa/pFootcube)
 # Contact
 
