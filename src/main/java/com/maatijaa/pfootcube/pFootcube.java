@@ -4,9 +4,9 @@ import com.maatijaa.pfootcube.core.Organization;
 import com.maatijaa.pfootcube.managers.PlayerManager;
 import com.maatijaa.pfootcube.system.Particles;
 import org.bukkit.*;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.PluginManager;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
@@ -19,10 +19,9 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.entity.Player;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 import java.util.UUID;
 import java.util.Collection;
@@ -33,10 +32,9 @@ import java.util.logging.Logger;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class pFootcube extends JavaPlugin implements Listener
-{
+public class pFootcube extends JavaPlugin implements Listener {
     private Logger logger;
-    public HashSet<Slime> cubes;
+    private HashSet<Slime> cubes;
     private HashMap<UUID, Vector> velocities;
     private HashMap<String, Long> kicked;
     private HashMap<String, Double> speed;
@@ -46,8 +44,6 @@ public class pFootcube extends JavaPlugin implements Listener
     private Particle particle;
 
     public pFootcube() {
-
-
         getLogger().info("888888  888888   8888");
         getLogger().info("88  88  88      88  88");
         getLogger().info("888888  888888  88 ");
@@ -55,7 +51,6 @@ public class pFootcube extends JavaPlugin implements Listener
         getLogger().info("88      88       888");
 
         getLogger().info("pFootcube se ucitava.");
-
 
         this.logger = Logger.getLogger("Minecraft");
         this.cubes = new HashSet<Slime>();
@@ -71,29 +66,42 @@ public class pFootcube extends JavaPlugin implements Listener
     }
 
     public void onEnable() {
-
         getLogger().info("Starting pFootcube..");
 
         getLogger().info("Loading Commands...");
         registerCommands();
-        getLogger().info("Commands succsesfully loaded.");
+        getLogger().info("Commands successfully loaded.");
 
         getLogger().info("Loading Listeners");
         registerListeners();
 
-        getLogger().info("pFootcube uspesno pokrenut.");
+        getLogger().info("pFootcube successfully started.");
 
         final PluginDescriptionFile pdfFile = this.getDescription();
         this.logger.info(String.valueOf(pdfFile.getName()) + " V" + pdfFile.getVersion() + " Has Been Enabled!");
-        this.getServer().getPluginManager().registerEvents((Listener)this, (Plugin)this);
+        this.getServer().getPluginManager().registerEvents(this, this);
         this.organization = new Organization(this);
         this.particles = new Particles(this);
-        this.getServer().getScheduler().scheduleSyncRepeatingTask((Plugin)this, (Runnable)new Runnable() {
+        this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
             public void run() {
                 pFootcube.this.particles.cubeEffect();
                 pFootcube.this.update();
             }
         }, 0L, 0L);
+    }
+
+    public void registerListeners() {
+        PluginManager pm = Bukkit.getPluginManager();
+        pm.registerEvents(new Particles(this), this);
+        pm.registerEvents(new PlayerManager(this), this);
+    }
+
+    public void registerCommands() {
+        getCommand("particles").setExecutor(new Particles(this));
+    }
+
+    public HashSet<Slime> getCubes() {
+        return cubes;
     }
     public boolean onCommand(final CommandSender sender, final Command cmd, final String c, final String[] args) {
         this.organization.command(sender, cmd, c, args);
@@ -128,16 +136,6 @@ public class pFootcube extends JavaPlugin implements Listener
             s2.setHealth(0.0);
         }
         return false;
-    }
-
-    public void registerListeners() {
-        PluginManager pm = Bukkit.getPluginManager();
-        pm.registerEvents(new Particles(this), this);
-        pm.registerEvents(new PlayerManager(this), this);
-    }
-
-    public void registerCommands() {
-        getCommand("particles").setExecutor(new Particles(this));
     }
 
     @EventHandler

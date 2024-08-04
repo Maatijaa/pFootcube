@@ -5,7 +5,6 @@ import com.maatijaa.pfootcube.system.Stats;
 import com.maatijaa.pfootcube.system.UUIDConverter;
 import com.maatijaa.pfootcube.pFootcube;
 import org.bukkit.plugin.RegisteredServiceProvider;
-import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.World;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -19,12 +18,9 @@ import org.bukkit.block.Sign;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.block.SignChangeEvent;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.EventHandler;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.Material;
-import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -150,7 +146,7 @@ public class Organization implements Listener
                 this.uuidConverter.put(p.getUniqueId().toString(), p.getName());
             }
             }
-        
+        // A
         this.setupEconomy();
         if (cfg.contains("arenas.world")) {
             for (final Entity e : this.plugin.getServer().getWorld(cfg.getString("arenas.world")).getEntities()) {

@@ -55,7 +55,7 @@ public class Particles implements CommandExecutor, Listener {
     }
 
     public void inventory(Player p) {
-        Inventory inv = Bukkit.getServer().createInventory(null, 27, "pFootcube Partikli.");
+        Inventory inv = Bukkit.getServer().createInventory(null, 27, "Footcube Partikli.");
         createStack(inv, 0, Material.BLAZE_POWDER, "Flames", "Klikni da ukljucis.");
         createStack(inv, 1, Material.EMERALD, "Green", "Klikni da ukljucis.");
         createStack(inv, 22, Material.BARRIER, "Disable", "Klikni da iskljucis sve partikle.");
@@ -168,7 +168,7 @@ public class Particles implements CommandExecutor, Listener {
         for (int length = (onlinePlayers = this.plugin.getServer().getOnlinePlayers()).size(), k = 0; k < length; k++) {
             Player p = (Player)onlinePlayers.toArray()[k];
             UUID uuid = p.getUniqueId();
-            for (Slime cube : this.plugin.cubes) {
+            for (Slime cube : this.plugin.getCubes()) {
                 if (!cube.isDead()) {
                     Particle hearts, sparky, rainbow, green, flames;
                     Location loc = cube.getLocation();
