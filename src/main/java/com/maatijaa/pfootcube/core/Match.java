@@ -396,7 +396,7 @@ public class Match implements Listener
                     message = String.valueOf(this.organization.pluginString) + ChatColor.GREEN + "Utakmica ce se nastaviti.";
                 }
                 this.phase = 3;
-                this.cube = this.plugin.spawnCube(this.mid);
+                this.plugin.spawnCube(this.mid);
                 final Random random = new Random();
                 final double vertical = 0.3 * random.nextDouble() + 0.2;
                 double horizontal = 0.3 * random.nextDouble() + 0.3;
